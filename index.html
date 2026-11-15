@@ -1,0 +1,396 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReachMax AI | Content Planner</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #151d31;
+      --border: #29354e;
+      --text: #f1f5ff;
+      --muted: #9eacc6;
+      --accent: #7c8cff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+    }
+    header {
+      padding: 30px 20px;
+      text-align: center;
+      background: #151d31;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 { margin: 0; font-size: 30px; }
+    header p { color: var(--muted); }
+    main { max-width: 1100px; margin: auto; padding: 24px 16px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+    h2 { margin-top: 0; font-size: 20px; }
+    label { display: block; margin: 12px 0 6px; }
+    input, select, textarea {
+      width: 100%;
+      background: #0b1020;
+      color: white;
+      padding: 12px;
+      border: 1px solid #38445e;
+      border-radius: 8px;
+      font: inherit;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    button {
+      background: var(--accent);
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #081020;
+    }
+    button:hover { opacity: .88; }
+    .secondary {
+      background: #303d58;
+      color: white;
+    }
+    .danger {
+      background: #6d2c3d;
+      color: white;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat {
+      text-align: center;
+      background: var(--panel);
+      padding: 18px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .stat strong { display: block; font-size: 28px; }
+    .stat span { color: var(--muted); font-size: 13px; }
+    .idea {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 12px;
+      overflow-wrap: anywhere;
+    }
+    .idea h3 { margin: 8px 0; }
+    .idea p {
+      white-space: pre-wrap;
+      color: var(--muted);
+    }
+    .tag {
+      display: inline-block;
+      background: #293555;
+      padding: 4px 9px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin: 3px;
+    }
+    .empty { color: var(--muted); text-align: center; padding: 24px; }
+    footer { text-align: center; color: var(--muted); padding: 25px; }
+    @media (max-width: 650px) {
+      .grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>🚀 ReachMax AI</h1>
+  <p>Social Media Content Planner</p>
+  <small>Plan Smarter. Create Better. Grow Consistently.</small>
+</header>
+
+<main>
+  <section class="stats">
+    <div class="stat"><strong id="total">0</strong><span>Total Ideas</span></div>
+    <div class="stat"><strong id="drafts">0</strong><span>Drafts</span></div>
+    <div class="stat"><strong id="progress">0</strong><span>In Progress</span></div>
+    <div class="stat"><strong id="published">0</strong><span>Published</span></div>
+  </section>
+
+  <section class="card">
+    <h2 id="formHeading">✨ Add Content Idea</h2>
+    <form id="ideaForm">
+      <label for="title">Content Title</label>
+      <input id="title" placeholder="e.g. 5 AI tools for creators" maxlength="120" required>
+
+      <div class="grid">
+        <div>
+          <label for="platform">Platform</label>
+          <select id="platform">
+            <option>Instagram</option>
+            <option>Facebook</option>
+            <option>YouTube</option>
+            <option>LinkedIn</option>
+            <option>X</option>
+          </select>
+        </div>
+        <div>
+          <label for="type">Content Type</label>
+          <select id="type">
+            <option>Post</option>
+            <option>Reel / Short</option>
+            <option>Video</option>
+            <option>Story</option>
+            <option>Thread</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="notes">Idea / Description</label>
+      <textarea id="notes" placeholder="Describe your content idea..."></textarea>
+
+      <label for="status">Status</label>
+      <select id="status">
+        <option>Draft</option>
+        <option>In Progress</option>
+        <option>Published</option>
+      </select>
+
+      <div class="actions">
+        <button id="saveButton" type="submit">Save Idea</button>
+        <button id="cancelButton" class="secondary" type="button" hidden>Cancel Edit</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>📂 My Content Ideas</h2>
+    <div class="grid">
+      <div>
+        <label for="filter">Filter by Platform</label>
+        <select id="filter">
+          <option>All Platforms</option>
+          <option>Instagram</option>
+          <option>Facebook</option>
+          <option>YouTube</option>
+          <option>LinkedIn</option>
+          <option>X</option>
+        </select>
+      </div>
+      <div>
+        <label for="statusFilter">Filter by Status</label>
+        <select id="statusFilter">
+          <option>All Statuses</option>
+          <option>Draft</option>
+          <option>In Progress</option>
+          <option>Published</option>
+        </select>
+      </div>
+    </div>
+    <div id="ideaList"></div>
+  </section>
+</main>
+
+<footer>
+  Built by Mohd Kashif | ReachMax AI
+  <p>V1 — Your ideas are stored in this browser only.</p>
+</footer>
+
+<script>
+  "use strict";
+
+  const STORAGE_KEY = "reachmax-content-ideas-v1";
+  let ideas = [];
+  let editingId = null;
+
+  const $ = id => document.getElementById(id);
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    if (Array.isArray(saved)) ideas = saved;
+  } catch (error) {
+    console.warn("Saved data could not be loaded.", error);
+  }
+
+  function saveData() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas));
+      return true;
+    } catch (error) {
+      alert("Unable to save. Check browser storage settings.");
+      return false;
+    }
+  }
+
+  function resetForm() {
+    $("ideaForm").reset();
+    editingId = null;
+    $("formHeading").textContent = "✨ Add Content Idea";
+    $("saveButton").textContent = "Save Idea";
+    $("cancelButton").hidden = true;
+  }
+
+  $("ideaForm").addEventListener("submit", event => {
+    event.preventDefault();
+
+    const title = $("title").value.trim();
+    if (!title) return;
+
+    const item = {
+      id: editingId || crypto.randomUUID(),
+      title,
+      platform: $("platform").value,
+      type: $("type").value,
+      notes: $("notes").value.trim(),
+      status: $("status").value
+    };
+
+    const previous = [...ideas];
+
+    if (editingId) {
+      ideas = ideas.map(x => x.id === editingId ? item : x);
+    } else {
+      ideas.unshift(item);
+    }
+
+    if (!saveData()) {
+      ideas = previous;
+      return;
+    }
+
+    resetForm();
+    renderIdeas();
+  });
+
+  $("cancelButton").addEventListener("click", resetForm);
+  $("filter").addEventListener("change", renderIdeas);
+  $("statusFilter").addEventListener("change", renderIdeas);
+
+  function makeButton(label, className, callback) {
+    const button = document.createElement("button");
+    button.textContent = label;
+    button.className = className;
+    button.type = "button";
+    button.addEventListener("click", callback);
+    return button;
+  }
+
+  function editIdea(id) {
+    const item = ideas.find(x => x.id === id);
+    if (!item) return;
+
+    editingId = item.id;
+    $("title").value = item.title;
+    $("platform").value = item.platform;
+    $("type").value = item.type;
+    $("notes").value = item.notes;
+    $("status").value = item.status;
+
+    $("formHeading").textContent = "✏️ Edit Content Idea";
+    $("saveButton").textContent = "Update Idea";
+    $("cancelButton").hidden = false;
+    $("ideaForm").scrollIntoView({ behavior: "smooth" });
+  }
+
+  function deleteIdea(id) {
+    if (!confirm("Delete this content idea?")) return;
+
+    const previous = [...ideas];
+    ideas = ideas.filter(x => x.id !== id);
+
+    if (!saveData()) {
+      ideas = previous;
+      return;
+    }
+
+    if (editingId === id) resetForm();
+    renderIdeas();
+  }
+
+  function renderIdeas() {
+    $("total").textContent = ideas.length;
+    $("drafts").textContent =
+      ideas.filter(x => x.status === "Draft").length;
+    $("progress").textContent =
+      ideas.filter(x => x.status === "In Progress").length;
+    $("published").textContent =
+      ideas.filter(x => x.status === "Published").length;
+
+    const platform = $("filter").value;
+    const status = $("statusFilter").value;
+
+    const filtered = ideas.filter(x =>
+      (platform === "All Platforms" || x.platform === platform) &&
+      (status === "All Statuses" || x.status === status)
+    );
+
+    const list = $("ideaList");
+    list.replaceChildren();
+
+    if (!filtered.length) {
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "No content ideas found. Add your first idea!";
+      list.appendChild(empty);
+      return;
+    }
+
+    filtered.forEach(item => {
+      const card = document.createElement("article");
+      card.className = "idea";
+
+      const heading = document.createElement("h3");
+      heading.textContent = item.title;
+
+      const tags = document.createElement("div");
+      [item.platform, item.type, item.status].forEach(value => {
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = value;
+        tags.appendChild(tag);
+      });
+
+      const notes = document.createElement("p");
+      notes.textContent = item.notes || "No description added.";
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      actions.appendChild(
+        makeButton("Edit", "secondary", () => editIdea(item.id))
+      );
+      actions.appendChild(
+        makeButton("Delete", "danger", () => deleteIdea(item.id))
+      );
+
+      card.append(heading, tags, notes, actions);
+      list.appendChild(card);
+    });
+  }
+
+  renderIdeas();
+</script>
+</body>
+</html>
