@@ -209,6 +209,22 @@
         </select>
       </div>
     </div>
+<div class="actions">
+  <button type="button" id="exportBackup">
+    📥 Export Backup
+  </button>
+
+  <button type="button" id="importBackup" class="secondary">
+    📤 Import Backup
+  </button>
+
+  <input
+    type="file"
+    id="backupFile"
+    accept=".json,application/json"
+    hidden
+  >
+</div>
     <div id="ideaList"></div>
   </section>
 </main>
@@ -389,6 +405,126 @@
       list.appendChild(card);
     });
   }
+
+  // Export content ideas as a JSON backup
+  $("exportBackup").addEventListener("click", () => {
+    const backup = {
+      app: "ReachMax AI Content Planner",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      ideas: ideas
+    };
+
+    const blob = new Blob(
+      [JSON.stringify(backup, null, 2)],
+      { type: "application/json" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "reachmax-content-backup.json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  // Open the backup file picker
+  $("importBackup").addEventListener("click", () => {
+    $("backupFile").click();
+  });
+
+  // Import and validate a backup
+  $("backupFile").addEventListener("change", async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Backup file exceeds 5 MB.");
+      }
+
+      const backup = JSON.parse(await file.text());
+
+      if (
+        backup.app !== "ReachMax AI Content Planner" ||
+        backup.version !== 1 ||
+        !Array.isArray(backup.ideas)
+      ) {
+        throw new Error("Invalid backup format.");
+      }
+
+      const platforms = [
+        "Instagram", "Facebook", "YouTube",
+        "LinkedIn", "X"
+      ];
+      const types = [
+        "Post", "Reel / Short", "Video",
+        "Story", "Thread"
+      ];
+      const statuses = [
+        "Draft", "In Progress", "Published"
+      ];
+
+      const valid = backup.ideas.every(item =>
+        item &&
+        typeof item.id === "string" &&
+        item.id.length > 0 &&
+        typeof item.title === "string" &&
+        item.title.trim().length > 0 &&
+        item.title.length <= 120 &&
+        typeof item.notes === "string" &&
+        platforms.includes(item.platform) &&
+        types.includes(item.type) &&
+        statuses.includes(item.status)
+      );
+
+      if (!valid) {
+        throw new Error("Backup contains invalid content ideas.");
+      }
+
+      const existingIds = new Set(ideas.map(item => item.id));
+      const newIds = new Set();
+
+      const imported = backup.ideas.filter(item => {
+        if (existingIds.has(item.id) || newIds.has(item.id)) {
+          return false;
+        }
+        newIds.add(item.id);
+        return true;
+      });
+
+      if (!imported.length) {
+        alert("No new ideas found. Existing ideas are unchanged.");
+        return;
+      }
+
+      const proceed = confirm(
+        `Import ${imported.length} new idea(s)? ` +
+        "Existing ideas will be preserved."
+      );
+
+      if (!proceed) return;
+
+      const previous = [...ideas];
+      ideas = [...imported, ...ideas];
+
+      if (!saveData()) {
+        ideas = previous;
+        return;
+      }
+
+      resetForm();
+      renderIdeas();
+      alert(`${imported.length} idea(s) imported successfully.`);
+
+    } catch (error) {
+      alert("Import failed: " + error.message);
+    } finally {
+      event.target.value = "";
+    }
+  });
 
   renderIdeas();
 </script>
